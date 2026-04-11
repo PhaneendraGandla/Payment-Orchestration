@@ -2,6 +2,7 @@ package com.phaneendra.payment_orchestration.service;
 
 import com.phaneendra.payment_orchestration.dto.PaymentRequest;
 import com.phaneendra.payment_orchestration.dto.PaymentResponse;
+import com.phaneendra.payment_orchestration.exception.PaymentNotFoundException;
 import com.phaneendra.payment_orchestration.model.Payment;
 import com.phaneendra.payment_orchestration.model.PaymentStatus;
 import com.phaneendra.payment_orchestration.repository.PaymentRepository;
@@ -27,7 +28,6 @@ public class PaymentOrchestrator {
     public PaymentResponse processPayment(PaymentRequest request, String idempotencyKey) {
 
 
-        // 🔥 Idempotency Check
         if (idempotencyKey != null && !idempotencyKey.isEmpty()) {
 
             var existingPayment = paymentRepository.findByIdempotencyKey(idempotencyKey);
@@ -62,10 +62,10 @@ public class PaymentOrchestrator {
         // Step 1: Get primary provider
         var primaryProvider = routingService.route(request.getPaymentMethod());
 
-// Step 2: Retry logic
+        // Step 2: Retry logic
         boolean success = retryService.executeWithRetry(primaryProvider, payment);
 
-// Step 3: Failover if needed
+        // Step 3: Failover if needed
         if (!success) {
 
             // Switch provider
@@ -81,13 +81,9 @@ public class PaymentOrchestrator {
             payment.setProvider(primaryProvider.getName());
         }
 
-// Step 4: Update status
+        // Step 4: Update status
         payment.setStatus(success ? PaymentStatus.SUCCESS : PaymentStatus.FAILED);
         payment.setUpdatedAt(LocalDateTime.now());
-
-
-
-
 
 
 
@@ -104,7 +100,7 @@ public class PaymentOrchestrator {
     public PaymentResponse getPayment(String id) {
 
         Payment payment = paymentRepository.findByExternalId(id)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
 
         return PaymentResponse.builder()
                 .paymentId(payment.getExternalId())
