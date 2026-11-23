@@ -31,7 +31,7 @@ entity -> Database models
 
 How to Run
 Clone the repository
-git clone [https://github.com/your-username/payment-orchestration.git](https://github.com/PhaneendraGandla/Payment-Orchestration)
+git clone [https://github.com/PhaneendraGandla/payment-orchestration.git](https://github.com/PhaneendraGandla/Payment-Orchestration)
 Navigate to the project
 cd payment-orchestration
 Run the application
